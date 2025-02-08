@@ -1,67 +1,113 @@
-# Thunder Loan Smart Contract Audit
+# Thunder Loan
 
-## Overview
+<br/>
+<p align="center">
+<img src="./thunder-loan.svg" width="700" alt="thunder-loans">
+</p>
+<br/>
 
-Thunder Loan is a flash loan protocol inspired by Aave and Compound. This repository contains the security audit of Thunder Loan, analyzing its smart contracts for vulnerabilities, optimizations, and adherence to best security practices. The audit also covers the ThunderLoanUpgraded contract and its integration with the TSwap price oracle.
+_A flash loan protocol based on [Aave](https://aave.com/) and [Compound](https://compound.finance/)._
 
-## Scope of Audit
+- [Thunder Loan](#thunder-loan)
+- [About](#about)
+- [Getting Started](#getting-started)
+  - [Requirements](#requirements)
+  - [Quickstart](#quickstart)
+- [Usage](#usage)
+  - [Testing](#testing)
+    - [Test Coverage](#test-coverage)
+- [Audit Scope Details](#audit-scope-details)
+  - [Roles](#roles)
+  - [Known Issues](#known-issues)
 
-The audit focuses on:
+# About
 
-- **Security vulnerabilities**: Identifying potential exploits, reentrancy attacks, and access control issues.
-- **Gas optimizations**: Improving contract efficiency and reducing transaction costs.
-- **Logic verification**: Ensuring the implementation aligns with intended functionality.
-- **Upgrade security**: Reviewing the ThunderLoanUpgraded contract for safe migration.
-- **Compliance checks**: Verifying adherence to Solidity best practices.
+The ⚡️ThunderLoan⚡️ protocol is meant to do the following:
 
-### In-Scope Contracts
+1. Give users a way to create flash loans
+2. Give liquidity providers a way to earn money off their capital
 
-- **Interfaces**:
-  - IFlashLoanReceiver.sol
-  - IPoolFactory.sol
-  - ITSwapPool.sol
-  - IThunderLoan.sol
-- **Protocol Contracts**:
-  - AssetToken.sol
-  - OracleUpgradeable.sol
-  - ThunderLoan.sol
-- **Upgraded Protocol**:
-  - ThunderLoanUpgraded.sol
+Liquidity providers can `deposit` assets into `ThunderLoan` and be given `AssetTokens` in return. These `AssetTokens` gain interest over time depending on how often people take out flash loans!
 
-## Audit Methodology
+What is a flash loan?
 
-1. **Manual Code Review**: Analyzing smart contract code line by line.
-2. **Static Analysis**: Using tools to detect vulnerabilities and inefficiencies.
-3. **Dynamic Testing**: Simulating real-world interactions to uncover unexpected behaviors.
-4. **Fuzz Testing**: Running randomized inputs to identify edge cases.
-5. **Formal Verification (if applicable)**: Ensuring correctness of key functions.
+A flash loan is a loan that exists for exactly 1 transaction. A user can borrow any amount of assets from the protocol as long as they pay it back in the same transaction. If they don't pay it back, the transaction reverts and the loan is cancelled.
 
-## Findings Summary
+Users additionally have to pay a small fee to the protocol depending on how much money they borrow. To calculate the fee, we're using the famous on-chain TSwap price oracle.
 
-| Severity      | Count |
-| ------------- | ----- |
-| Critical      | X     |
-| High          | X     |
-| Medium        | X     |
-| Low           | X     |
-| Informational | X     |
+We are planning to upgrade from the current `ThunderLoan` contract to the `ThunderLoanUpgraded` contract. Please include this upgrade in scope of a security review.
 
-A detailed report of findings and recommendations is included in the **Audit Report**.
+# Getting Started
 
-## Tools Used
+## Requirements
 
-- Slither
-- Mythril
-- Foundry (for fuzz testing)
-- Hardhat/Echidna
-- Manual review
+- [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+  - You'll know you did it right if you can run `git --version` and you see a response like `git version x.x.x`
+- [foundry](https://getfoundry.sh/)
+  - You'll know you did it right if you can run `forge --version` and you see a response like `forge 0.2.0 (816e00b 2023-03-16T00:05:26.396218Z)`
+
+## Quickstart
+
+```
+git clone https://github.com/MDulquerS/Thunder-Loan
+make
+```
+
+# Usage
+
+## Testing
+
+```
+forge test
+```
+
+### Test Coverage
+
+```
+forge coverage
+```
+
+and for coverage based testing:
+
+```
+forge coverage --report debug
+```
+
+# Audit Scope Details
+
+- Commit Hash:
+- In Scope:
+
+```
+#-- interfaces
+|   #-- IFlashLoanReceiver.sol
+|   #-- IPoolFactory.sol
+|   #-- ITSwapPool.sol
+|   #-- IThunderLoan.sol
+#-- protocol
+|   #-- AssetToken.sol
+|   #-- OracleUpgradeable.sol
+|   #-- ThunderLoan.sol
+#-- upgradedProtocol
+    #-- ThunderLoanUpgraded.sol
+```
+
+- Solc Version: 0.8.20
+- Chain(s) to deploy contract to: Ethereum
+- ERC20s:
+  - USDC
+  - DAI
+  - LINK
+  - WETH
+
+## Roles
+
+- Owner: The owner of the protocol who has the power to upgrade the implementation.
+- Liquidity Provider: A user who deposits assets into the protocol to earn interest.
+- User: A user who takes out flash loans from the protocol.
 
 ## Known Issues
 
-- **getCalculatedFee may result in zero fees for small flash loans.** This is an accepted limitation.
-- **First depositor advantage in assetToken distribution.** A large initial deposit is planned to mitigate this.
-- **Incompatibility with certain ERC-20 tokens.** Fee-on-transfer, rebasing, and ERC-777 tokens may cause issues; only vetted tokens will be added.
-
-## Disclaimer
-
-This audit does not guarantee the absence of vulnerabilities. It is the responsibility of the Thunder Loan team to implement fixes and conduct further testing before deployment.
+- We are aware that `getCalculatedFee` can result in 0 fees for very small flash loans. We are OK with that. There is some small rounding errors when it comes to low fees
+- We are aware that the first depositor gets an unfair advantage in assetToken distribution. We will be making a large initial deposit to mitigate this, and this is a known issue
+- We are aware that "weird" ERC20s break the protocol, including fee-on-transfer, rebasing, and ERC-777 tokens. The owner will vet any additional tokens before adding them to the protocol.
