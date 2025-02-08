@@ -75,7 +75,7 @@ forge coverage --report debug
 
 # Audit Scope Details
 
-- Commit Hash:
+- Commit Hash: a9717be8a17ef0c613fc9c6fa790d4af976ffdaf
 - In Scope:
 
 ```
